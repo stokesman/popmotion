@@ -52,7 +52,7 @@
       ]
     },
     "alwaysStrict": true,
-    "declaration": true,
+    "noEmit": true,
     "forceConsistentCasingInFileNames": true,
     "allowSyntheticDefaultImports": true,
     "lib": [

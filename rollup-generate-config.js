@@ -1,13 +1,9 @@
-import typescript from 'rollup-plugin-typescript2';
+import typescript from '@rollup/plugin-typescript';
 import resolve from '@rollup/plugin-node-resolve';
 import replace from '@rollup/plugin-replace';
-import { uglify } from 'rollup-plugin-uglify';
+import { terser } from 'rollup-plugin-terser';
 
-const typescriptConfig = { cacheRoot: 'tmp/.rpt2_cache' };
-const noDeclarationConfig = {
-  ...typescriptConfig,
-  tsconfigOverride: { compilerOptions: { declaration: false } }
-};
+const dirFromPath = path => path.replace(/[^\/]*$/,'');
 
 const makeExternalPredicate = externalArr => {
   if (externalArr.length === 0) {
@@ -20,6 +16,9 @@ const makeExternalPredicate = externalArr => {
 export default function(pkg, name = pkg.name) {
   const deps = Object.keys(pkg.dependencies || {});
   const peerDeps = Object.keys(pkg.peerDependencies || {});
+
+  //outDir shared by ts and cjs
+  const outDir = dirFromPath(pkg.main);
 
   const config = {
     input: 'src/index.ts',
@@ -48,7 +47,7 @@ export default function(pkg, name = pkg.name) {
     external: makeExternalPredicate(peerDeps),
     plugins: [
       resolve(),
-      typescript(noDeclarationConfig),
+      typescript(),
       replace({
         'process.env.NODE_ENV': JSON.stringify('development')
       })
@@ -63,32 +62,31 @@ export default function(pkg, name = pkg.name) {
     },
     plugins: [
       resolve(),
-      typescript(noDeclarationConfig),
+      typescript(),
       replace({
         'process.env.NODE_ENV': JSON.stringify('production')
       }),
-      uglify()
+      terser({ output:{ comments: false }})
     ]
   };
 
   const es = {
     ...config,
-    input: 'src/index.ts',
     output: {
       file: pkg.module,
       format: 'es'
     },
-    plugins: [typescript(noDeclarationConfig)]
+    plugins: [typescript()]
   };
 
   const cjs = {
     ...config,
     output: {
-      file: pkg.main,
+      dir: outDir,
       format: 'cjs',
       exports: 'named'
     },
-    plugins: [typescript(typescriptConfig)]
+    plugins: [typescript({ declaration:true, outDir })]
   };
 
   return [umd, umdProd, es, cjs];
