@@ -74,9 +74,11 @@ export default function(pkg, name = pkg.name) {
     ...config,
     output: {
       file: pkg.module,
-      format: 'es'
+      format: 'es',
+      sourcemap: true,
+      sourcemapExcludeSources: true,
     },
-    plugins: [typescript()]
+    plugins: [typescript({ sourceMap: true })]
   };
 
   const cjs = {
@@ -84,9 +86,11 @@ export default function(pkg, name = pkg.name) {
     output: {
       dir: outDir,
       format: 'cjs',
-      exports: 'named'
+      exports: 'named',
+      sourcemap: true,
+      sourcemapExcludeSources: true,
     },
-    plugins: [typescript({ declaration:true, outDir })]
+    plugins: [typescript({ declaration: true, sourceMap: true, outDir })]
   };
 
   return [umd, umdProd, es, cjs];
