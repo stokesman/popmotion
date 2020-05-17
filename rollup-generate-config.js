@@ -2,11 +2,19 @@ import typescript from '@rollup/plugin-typescript';
 import resolve from '@rollup/plugin-node-resolve';
 import replace from '@rollup/plugin-replace';
 import { terser } from 'rollup-plugin-terser';
-import { dirname } from 'path';
+import { basename, dirname } from 'path';
+
+const deprecatedGlobals = {
+  'pose-core': 'poseCore',
+  'popmotion-pose': 'pose',
+  'react-pose': 'pose',
+}
 
 export default function(pkg, name = pkg.name) {
   const deps = Object.keys(pkg.dependencies || {});
   const peerDeps = Object.keys(pkg.peerDependencies || {});
+
+  const fileName = basename(pkg.name);
 
   //outDir shared by ts and cjs
   const outDir = dirname(pkg.main);
@@ -19,7 +27,7 @@ export default function(pkg, name = pkg.name) {
   const umd = {
     ...config,
     output: {
-      file: `dist/${name}.js`,
+      file: `dist/${fileName}.js`,
       format: 'umd',
       name,
       exports: 'named',
@@ -30,9 +38,9 @@ export default function(pkg, name = pkg.name) {
         framesync: 'framesync',
         stylefire: 'stylefire',
         popmotion: 'popmotion',
-        'pose-core': 'poseCore',
         '@popmotion/easing': 'easing',
-        '@popmotion/popcorn': 'popcorn'
+        '@popmotion/popcorn': 'popcorn',
+        ...deprecatedGlobals
       }
     },
     external: peerDeps,
@@ -49,7 +57,7 @@ export default function(pkg, name = pkg.name) {
     ...umd,
     output: {
       ...umd.output,
-      file: pkg.unpkg || `dist/${name}.min.js`
+      file: pkg.unpkg || `dist/${fileName}.min.js`
     },
     plugins: [
       resolve(),

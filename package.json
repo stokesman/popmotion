@@ -5,7 +5,9 @@
   "homepage": "https://popmotion.io",
   "scripts": {
     "bootstrap": "lerna bootstrap",
-    "build": "lerna run --ignore popmotion-site --ignore blend-tweens --ignore react-360-pose --ignore test-* --ignore vue-pose build",
+    "lbuild": "lerna run --ignore popmotion-site --ignore blend-tweens --ignore react-360-pose --ignore test-* --ignore vue-pose build",
+    "build": "cd packages/easing && yarn build && cd ../style-value-types && yarn build && cd ../framesync && yarn build && cd ../popcorn && yarn build && cd ../stylefire && yarn build && cd ../popmotion && yarn build && cd ../pose-core && yarn build && cd ../animated-pose && yarn build && cd ../react-pose-core && yarn build && cd ../react-native-pose && yarn build && cd ../popmotion-pose && yarn build && cd ../react-pose && yarn build && cd ../react-pose-text && yarn build",
+    "raze": "lerna exec --ignore popmotion-site --ignore blend-tweens --ignore react-360-pose --ignore test-* --ignore vue-pose -- rm -rf dist lib",
     "playground": "start-storybook -p 6006",
     "build-playground": "build-storybook",
     "clean": "lerna clean --yes && rm -rf node_modules",
