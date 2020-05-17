@@ -2,27 +2,18 @@ import typescript from '@rollup/plugin-typescript';
 import resolve from '@rollup/plugin-node-resolve';
 import replace from '@rollup/plugin-replace';
 import { terser } from 'rollup-plugin-terser';
-
-const dirFromPath = path => path.replace(/[^\/]*$/,'');
-
-const makeExternalPredicate = externalArr => {
-  if (externalArr.length === 0) {
-    return () => false;
-  }
-  const pattern = new RegExp(`^(${externalArr.join('|')})($|/)`);
-  return id => pattern.test(id);
-};
+import { dirname } from 'path';
 
 export default function(pkg, name = pkg.name) {
   const deps = Object.keys(pkg.dependencies || {});
   const peerDeps = Object.keys(pkg.peerDependencies || {});
 
   //outDir shared by ts and cjs
-  const outDir = dirFromPath(pkg.main);
+  const outDir = dirname(pkg.main);
 
   const config = {
     input: 'src/index.ts',
-    external: makeExternalPredicate(deps.concat(peerDeps))
+    external: deps.concat(peerDeps)
   };
 
   const umd = {
@@ -44,7 +35,7 @@ export default function(pkg, name = pkg.name) {
         '@popmotion/popcorn': 'popcorn'
       }
     },
-    external: makeExternalPredicate(peerDeps),
+    external: peerDeps,
     plugins: [
       resolve(),
       typescript(),
