@@ -7,7 +7,7 @@
   "module": "dist/popmotion-pose.es.js",
   "jsnext:main": "dist/popmotion-pose.es.js",
   "scripts": {
-    "build": "rollup -c && tsc --emitDeclarationOnly && npm run measure",
+    "build": "rollup -c && npm run measure",
     "postbuild": "babel $npm_package_module --out-file $npm_package_module --no-babelrc --plugins annotate-pure-calls",
     "watch": "rollup -c -w",
     "test": "jest --maxWorkers=2",

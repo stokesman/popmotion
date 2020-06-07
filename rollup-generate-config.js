@@ -1,35 +1,33 @@
-import typescript from 'rollup-plugin-typescript2';
+import typescript from '@rollup/plugin-typescript';
 import resolve from '@rollup/plugin-node-resolve';
 import replace from '@rollup/plugin-replace';
-import { uglify } from 'rollup-plugin-uglify';
+import { terser } from 'rollup-plugin-terser';
+import { basename, dirname } from 'path';
 
-const typescriptConfig = { cacheRoot: 'tmp/.rpt2_cache' };
-const noDeclarationConfig = {
-  ...typescriptConfig,
-  tsconfigOverride: { compilerOptions: { declaration: false } }
-};
-
-const makeExternalPredicate = externalArr => {
-  if (externalArr.length === 0) {
-    return () => false;
-  }
-  const pattern = new RegExp(`^(${externalArr.join('|')})($|/)`);
-  return id => pattern.test(id);
-};
+const deprecatedGlobals = {
+  'pose-core': 'poseCore',
+  'popmotion-pose': 'pose',
+  'react-pose': 'pose',
+}
 
 export default function(pkg, name = pkg.name) {
   const deps = Object.keys(pkg.dependencies || {});
   const peerDeps = Object.keys(pkg.peerDependencies || {});
 
+  const fileName = basename(pkg.name);
+
+  //outDir shared by ts and cjs
+  const outDir = dirname(pkg.main);
+
   const config = {
     input: 'src/index.ts',
-    external: makeExternalPredicate(deps.concat(peerDeps))
+    external: deps.concat(peerDeps)
   };
 
   const umd = {
     ...config,
     output: {
-      file: `dist/${name}.js`,
+      file: `dist/${fileName}.js`,
       format: 'umd',
       name,
       exports: 'named',
@@ -40,15 +38,15 @@ export default function(pkg, name = pkg.name) {
         framesync: 'framesync',
         stylefire: 'stylefire',
         popmotion: 'popmotion',
-        'pose-core': 'poseCore',
         '@popmotion/easing': 'easing',
-        '@popmotion/popcorn': 'popcorn'
+        '@popmotion/popcorn': 'popcorn',
+        ...deprecatedGlobals
       }
     },
-    external: makeExternalPredicate(peerDeps),
+    external: peerDeps,
     plugins: [
       resolve(),
-      typescript(noDeclarationConfig),
+      typescript(),
       replace({
         'process.env.NODE_ENV': JSON.stringify('development')
       })
@@ -59,36 +57,39 @@ export default function(pkg, name = pkg.name) {
     ...umd,
     output: {
       ...umd.output,
-      file: pkg.unpkg || `dist/${name}.min.js`
+      file: pkg.unpkg || `dist/${fileName}.min.js`
     },
     plugins: [
       resolve(),
-      typescript(noDeclarationConfig),
+      typescript(),
       replace({
         'process.env.NODE_ENV': JSON.stringify('production')
       }),
-      uglify()
+      terser({ output:{ comments: false }})
     ]
   };
 
   const es = {
     ...config,
-    input: 'src/index.ts',
     output: {
       file: pkg.module,
-      format: 'es'
+      format: 'es',
+      sourcemap: true,
+      sourcemapExcludeSources: true,
     },
-    plugins: [typescript(noDeclarationConfig)]
+    plugins: [typescript({ sourceMap: true })]
   };
 
   const cjs = {
     ...config,
     output: {
-      file: pkg.main,
+      dir: outDir,
       format: 'cjs',
-      exports: 'named'
+      exports: 'named',
+      sourcemap: true,
+      sourcemapExcludeSources: true,
     },
-    plugins: [typescript(typescriptConfig)]
+    plugins: [typescript({ declaration: true, sourceMap: true, outDir })]
   };
 
   return [umd, umdProd, es, cjs];

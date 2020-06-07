@@ -5,7 +5,6 @@
     "noImplicitAny": true,
     "removeComments": true,
     "preserveConstEnums": true,
-    "sourceMap": true,
     "noUnusedLocals": true,
     "target": "es5",
     "watch": false,
@@ -52,7 +51,7 @@
       ]
     },
     "alwaysStrict": true,
-    "declaration": true,
+    "noEmit": true,
     "forceConsistentCasingInFileNames": true,
     "allowSyntheticDefaultImports": true,
     "lib": [
