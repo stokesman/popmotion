@@ -9,3 +9,8 @@
 /observer
 /chainable
 /reactions
+
+!/dist
+!/lib
+!/lib/*.d.ts
+!/lib/**/*.d.ts
