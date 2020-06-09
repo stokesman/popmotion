@@ -21,10 +21,20 @@ export class ValueReaction extends BaseMulticast<ValueReaction> {
   private current: Value;
   private timeDelta: number;
   private lastUpdated: number;
+  private scheduleVelocityCheck: () => void;
+  private velocityCheck: ({ timestamp }: FrameData) => void;
 
   constructor(props: ValueProps) {
     super(props);
     this.prev = this.current = props.value || 0;
+
+    this.scheduleVelocityCheck = () => {
+      sync.postRender(this.velocityCheck);
+    };
+
+    this.velocityCheck = ({ timestamp }) => {
+      if (timestamp !== this.lastUpdated) this.prev = this.current;
+    };
 
     this.updateCurrent = (v: number | string) => (this.current = v);
     this.getVelocityOfCurrent = () =>
@@ -55,16 +65,8 @@ export class ValueReaction extends BaseMulticast<ValueReaction> {
     const { delta, timestamp } = getFrameData();
     this.timeDelta = delta;
     this.lastUpdated = timestamp;
-    sync.postRender(this.scheduleVelocityCheck);
+    this.scheduleVelocityCheck();
   }
-
-  scheduleVelocityCheck = () => sync.postRender(this.velocityCheck);
-
-  velocityCheck = ({ timestamp }: FrameData) => {
-    if (timestamp !== this.lastUpdated) {
-      this.prev = this.current;
-    }
-  };
 
   subscribe(observerCandidate: ObserverCandidate): HotSubscription {
     const sub = super.subscribe(observerCandidate);
